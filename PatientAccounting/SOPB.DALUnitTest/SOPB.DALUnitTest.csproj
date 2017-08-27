@@ -52,6 +52,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ConnectionManager\ConnectionManagerTests.cs" />
+    <Compile Include="ConnectionManager\RoleForUserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
