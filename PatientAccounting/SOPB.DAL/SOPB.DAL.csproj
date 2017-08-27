@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConnectionManager\ConnectionManager.cs" />
+    <Compile Include="ConnectionManager\GenericAccess.cs" />
     <Compile Include="ConnectionManager\RoleForUser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

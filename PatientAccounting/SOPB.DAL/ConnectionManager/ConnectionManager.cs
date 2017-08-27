@@ -39,6 +39,11 @@ namespace SOPB.Accounting.DAL.ConnectionManager
             get { return _connectionString; }
         }
 
+        public static SqlCommand SqlCommand
+        {
+            get { return _sqlConnection.CreateCommand(); }
+        }
+
         public static SqlConnection GetConnection(string login, string password)
         {
             SetConnection(login, password);
