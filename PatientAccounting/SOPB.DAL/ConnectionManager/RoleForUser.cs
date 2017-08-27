@@ -21,7 +21,6 @@ namespace SOPB.Accounting.DAL.ConnectionManager
 
                 using (SqlCommand command = ConnectionManager.SqlCommand)
                 {
-                    command.CommandType = CommandType.StoredProcedure;
                     command.CommandText = "uspGetRoleForUser";
                     SqlParameter parameter = new SqlParameter
                     {
