@@ -12,6 +12,8 @@ namespace SOPB.Accounting.DAL.ConnectionManager
     /// </summary>
     public static class ConnectionManager
     {
+        private static bool _isInit = true;
+
         // cache data for connection settings.
         private static string _dbProviderName;
         private static string _dbDatabaseName;
@@ -26,50 +28,36 @@ namespace SOPB.Accounting.DAL.ConnectionManager
             _dbServerName = ConfigurationManager.AppSettings["ServerName"];
             _dbProviderName = ConfigurationManager.ConnectionStrings["SOPB.PatientAccounting"].ProviderName;
             _connectionString = String.Empty;
-            _sqlConnection = new SqlConnection();
+          _sqlConnection = new SqlConnection();
         }
 
-        public static string DbProviderName
+        public static SqlConnection Connection
         {
-            get { return ConfigurationManager.ConnectionStrings["SOPB.PatientAcounting"].ProviderName; }
-        }
-
-        public static string ConnectionString
-        {
-            get { return _connectionString; }
-        }
-
-        public static SqlCommand SqlCommand
-        {
-            get { return _sqlConnection.CreateCommand(); }
-        }
-
-        public static SqlConnection GetConnection(string login, string password)
-        {
-            SetConnection(login, password);
-            if (string.IsNullOrEmpty(_connectionString))
+            get
             {
-                throw new ArgumentNullException("Class Connection Manager","Незадана строка подключения к БД. Вызовите для начала метод SetConnectionString.");
+                if (string.IsNullOrEmpty(_connectionString))
+                {
+                    throw new ArgumentNullException("Class Connection Manager",
+                       "Незадана строка подключения к БД. Вызовите для начала метод SetConnectionString.");
+                }
+               else  if (_sqlConnection.State == ConnectionState.Closed && string.IsNullOrEmpty(_sqlConnection.ConnectionString))
+                    _sqlConnection.ConnectionString = _connectionString;
+                return _sqlConnection;
             }
-            return _sqlConnection;
         }
-
-        private static void SetConnection(string login, string password)
+        public static void SetConnection(string login, string password)
         {
-            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder();
-            builder.DataSource = _dbServerName;
-            builder.InitialCatalog = _dbDatabaseName;
-            builder.UserID = login;
-            builder.Password = password;
-            builder.MultipleActiveResultSets = true;
-            _connectionString = builder.ConnectionString;
-            if (string.IsNullOrEmpty(_sqlConnection.ConnectionString))
+            if (_isInit)
             {
+                SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder();
+                builder.DataSource = _dbServerName;
+                builder.InitialCatalog = _dbDatabaseName;
+                builder.UserID = login;
+                builder.Password = password;
+                builder.MultipleActiveResultSets = true;
+                _connectionString = builder.ConnectionString;
                 _sqlConnection.ConnectionString = _connectionString;
-            }
-            else
-            {
-                _sqlConnection = new SqlConnection(_connectionString);
+                _isInit = false;
             }
         }
 
@@ -77,7 +65,8 @@ namespace SOPB.Accounting.DAL.ConnectionManager
         {
             try
             {
-                using (SqlConnection connection = GetConnection(login, password))
+                SetConnection(login, password);
+                using (SqlConnection connection = Connection)
                 {
                     connection.Open();
                     return connection.State == ConnectionState.Open;

@@ -16,23 +16,26 @@ namespace SOPB.Accounting.DAL.ConnectionManager
             string role = String.Empty;
             try
             {
-                SqlConnection connection = ConnectionManager.GetConnection(login, password);
+                ConnectionManager.SetConnection("Катя", "1");
+               SqlConnection connection = ConnectionManager.Connection;
                 
 
-                using (SqlCommand command = ConnectionManager.SqlCommand)
+                using (SqlCommand command = connection.CreateCommand())
                 {
+                    command.CommandType = CommandType.StoredProcedure;
                     command.CommandText = "uspGetRoleForUser";
                     SqlParameter parameter = new SqlParameter
                     {
-                        ParameterName = "@role",
+                        ParameterName = "@Role",
                         Size = 50,
+                        SqlDbType = SqlDbType.NVarChar,
                         Direction = ParameterDirection.Output
                     };
                     command.Parameters.Add(parameter);
 
                     command.Connection.Open();
                     command.ExecuteNonQuery();
-                    role = ((string) command.Parameters["@role"].Value).Trim();
+                    role = ((string) command.Parameters["@Role"].Value).Trim();
                 }
             }
             catch (SqlException)

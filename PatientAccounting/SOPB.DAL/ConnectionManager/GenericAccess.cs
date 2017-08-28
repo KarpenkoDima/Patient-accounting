@@ -8,11 +8,6 @@ namespace SOPB.Accounting.DAL.ConnectionManager
 {
     static class GenericAccess
     {
-        public static DbCommand CreateCommand()
-        {
-            var command = ConnectionManager.SqlCommand;
-            command.CommandType = CommandType.StoredProcedure;
-            return command;
-        } 
+       
     }
 }
