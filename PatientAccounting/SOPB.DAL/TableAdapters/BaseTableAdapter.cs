@@ -147,7 +147,7 @@ namespace SOPB.Accounting.DAL.TableAdapters
                 if (table.HasErrors)
                 {
                     StringBuilder stringBuilder = new StringBuilder();
-                    stringBuilder.AppendLine("Дфннфя строка(и) была обновлена не удачно.");
+                    stringBuilder.AppendLine("Данная строка(и) была обновлена не удачно.");
                     foreach (DataRow row in table.Rows)
                     {
                         if (row.HasErrors)

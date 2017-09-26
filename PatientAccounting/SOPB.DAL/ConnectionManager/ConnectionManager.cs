@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
+using System.Security;
 using System.Text;
 
 namespace SOPB.Accounting.DAL.ConnectionManager
@@ -15,50 +17,65 @@ namespace SOPB.Accounting.DAL.ConnectionManager
         private static bool _isInit = true;
 
         // cache data for connection settings.
-        private static string _dbProviderName;
-        private static string _dbDatabaseName;
-        private static string _dbServerName;
-
+        private static readonly string _dbProviderName;
+        private static readonly string _dbDatabaseName;
+        private static readonly string _dbServerName;
+                       
+        private static SecureString _secureString;
         private static string _connectionString;
-        private static SqlConnection _sqlConnection;
+        private static string _userID;
+        private static   SqlConnection _sqlConnection;
 
         static ConnectionManager()
         {
             _dbDatabaseName = ConfigurationManager.AppSettings["DatabaseName"];
             _dbServerName = ConfigurationManager.AppSettings["ServerName"];
-            _dbProviderName = ConfigurationManager.ConnectionStrings["SOPB.PatientAccounting"].ProviderName;
-            _connectionString = String.Empty;
-          _sqlConnection = new SqlConnection();
+            _dbProviderName = ConfigurationManager.AppSettings["ProviderName"];
+            
+          _secureString=new SecureString();
         }
 
+        /// <summary>
+        /// Return SqlConnecction object with Statet Closed.
+        /// </summary>
         public static SqlConnection Connection
         {
             get
             {
-                if (string.IsNullOrEmpty(_connectionString))
+                SqlCredential cred = new SqlCredential(_userID, _secureString);
+                if (_sqlConnection != null  && _sqlConnection.State == ConnectionState.Closed)
                 {
-                    throw new ArgumentNullException("Class Connection Manager",
-                       "Незадана строка подключения к БД. Вызовите для начала метод SetConnectionString.");
-                }
-               else  if (_sqlConnection.State == ConnectionState.Closed && string.IsNullOrEmpty(_sqlConnection.ConnectionString))
                     _sqlConnection.ConnectionString = _connectionString;
+                    _sqlConnection.Credential = cred;
+                }
+                else
+                {
+                    _sqlConnection = new SqlConnection();
+                    _sqlConnection.ConnectionString = _connectionString;
+                    _sqlConnection.Credential = cred;
+                }
+                
                 return _sqlConnection;
             }
         }
+
         public static void SetConnection(string login, string password)
         {
-            if (_isInit)
+
+            _secureString = new SecureString();
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder();
+            builder.DataSource = _dbServerName;
+            builder.InitialCatalog = _dbDatabaseName;
+            _userID = login;
+            builder.MultipleActiveResultSets = true;
+            foreach (char c in password)
             {
-                SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder();
-                builder.DataSource = _dbServerName;
-                builder.InitialCatalog = _dbDatabaseName;
-                builder.UserID = login;
-                builder.Password = password;
-                builder.MultipleActiveResultSets = true;
-                _connectionString = builder.ConnectionString;
-                _sqlConnection.ConnectionString = _connectionString;
-                _isInit = false;
+                _secureString.AppendChar(c);
             }
+
+            _secureString.MakeReadOnly();
+            password = String.Empty;
+            _connectionString = builder.ToString();
         }
 
         public static bool TestConnection(string login, string password)
